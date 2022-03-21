@@ -3,7 +3,6 @@ package library
 // 返回数据处理 TODO:: data数据及json数据可选处理
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -24,7 +23,6 @@ func NewResponseBody() *ResponseBody {
 }
 
 func (rep *ResponseBody) SetData(data interface{}) {
-	log.Println("----", data)
 	rep.Data = data
 }
 

@@ -3,6 +3,7 @@ package router
 import (
 	v1 "box/api/v1"
 	"box/library"
+	"box/middle"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -34,6 +35,11 @@ func Http(r *gin.Engine) {
 		apiRouter.POST("/login_json", v1.Login)
 		apiRouter.POST("/login_form", v1.LoginFromForm)
 		apiRouter.GET("/login/:username/:password", v1.LoginFromUri)
+	}
+	authRouter := r.Group("api/v1")
+	authRouter.Use(middle.JWTAuth())
+	{
+		authRouter.GET("user/:id", v1.GetUserById)
 	}
 	r.NoRoute(func(c *gin.Context) {
 		resBody := &library.ResponseBody{Code: 404, Message: "route not found!"}
