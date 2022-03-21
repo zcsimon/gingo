@@ -65,7 +65,7 @@ func UserLogin(param *model.LoginRequestParams, responseBody *library.ResponseBo
 	}
 
 	data := LoginResult{
-		User:    user,
+		User:    *user,
 		Token:   token,
 		Expired: int(claims.ExpiresAt),
 	}
