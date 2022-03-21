@@ -2,6 +2,7 @@ package services
 
 // 服务层 。TODO:: gorm操作
 import (
+	"box/dao"
 	"box/library"
 	"box/middle"
 	"box/model"
@@ -35,7 +36,7 @@ func UserLogin(param *model.LoginRequestParams, responseBody *library.ResponseBo
 		[]byte("zcSimon"),
 	}
 
-	isPass, user, err := model.CheckLogin(param)
+	isPass, user, err := dao.CheckLogin(param)
 	log.Println(isPass, user, err)
 	if !isPass && err != nil {
 		responseBody.SetCode(-1)
@@ -44,7 +45,7 @@ func UserLogin(param *model.LoginRequestParams, responseBody *library.ResponseBo
 	}
 
 	//user := model.User{}
-	claims := middle.CustomClaims{
+	claims := &middle.CustomClaims{
 		user.Id,
 		user.UserName,
 		user.Mobile,

@@ -81,30 +81,18 @@ func LoginFromUri(c *gin.Context) {
 // TODO:: uri参数 query参数及 Form 参数同时请求 处理方案。
 
 func GetUserById(c *gin.Context) {
-	// claims := c.MustGet("claims").(*jwt.CustomClaims)
-	// if claims != nil {
-	// 	c.JSON(http.StatusOK, gin.H{
-	// 		"status": 0,
-	// 		"msg":    "token有效",
-	// 		"data":   claims,
-	// 	})
-	// }
-	log.Println("start controller")
-	responseBody := library.NewResponseBody()
 
+	responseBody := library.NewResponseBody()
 	defer library.RecoverResponse(c, responseBody)
 	//c.PostForm("text")
 	param := &model.SelectUserByIdParam{}
-
 	err := c.BindUri(param)
-	log.Println("controller")
 	if err != nil {
 		log.Println(err.Error())
 		responseBody.Code = 500
 		responseBody.Message = err.Error()
 		return
 	}
-
 	services.GetUserById(c, param, responseBody)
 
 }

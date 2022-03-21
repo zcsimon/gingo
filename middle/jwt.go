@@ -93,7 +93,7 @@ func SetSignKey(key string) string {
 }
 
 // CreateToken 生成一个token
-func (j *JWT) CreateToken(claims CustomClaims) (string, error) {
+func (j *JWT) CreateToken(claims *CustomClaims) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString(j.SigningKey)
 }
@@ -139,7 +139,7 @@ func (j *JWT) RefreshToken(tokenString string) (string, error) {
 	if claims, ok := token.Claims.(*CustomClaims); ok && token.Valid {
 		jwt.TimeFunc = time.Now
 		claims.StandardClaims.ExpiresAt = time.Now().Add(1 * time.Hour).Unix()
-		return j.CreateToken(*claims)
+		return j.CreateToken(claims)
 	}
 	return "", ErrTokenInvalid
 }
