@@ -8,13 +8,13 @@ import (
 )
 
 var (
-	Db  *sql.DB
-	err error
+	DbConn *sql.DB
+	err    error
 )
 
 func init() {
 	// Db, err := sql.Open("mysql", "root:123456@localhost:3306/beego")
-	Db, err = sql.Open("mysql", "root:123456@/beego")
+	DbConn, err = sql.Open("mysql", "root:123456@/beego")
 
 	if err != nil {
 		log.Println("连接失败:", err.Error())
