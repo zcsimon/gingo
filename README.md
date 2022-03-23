@@ -7,3 +7,7 @@
 # 2022-3-21 添加 MySql 应用 实现 增删改查等
 // TODO:: 封装所有数据库操作
 1、添加Dao 操作
+
+# 2022-3-23 RabbitMq 
+
+添加rabbitmq simple 模式
