@@ -5,56 +5,19 @@ import (
 	"box/app/shop"
 	"box/library"
 	"box/router"
-	"bufio"
-	"fmt"
+	"box/utils"
 	"io"
 	"net/http"
 	"os"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 )
 
-//读取key=value类型的配置文件
-func InitConfig() map[string]string {
-	config := make(map[string]string)
-
-	f, err := os.Open(".env")
-	defer f.Close()
-	if err != nil {
-		panic(err)
-	}
-
-	r := bufio.NewReader(f)
-	for {
-		b, _, err := r.ReadLine()
-		if err != nil {
-			if err == io.EOF {
-				break
-			}
-			panic(err)
-		}
-		s := strings.TrimSpace(string(b))
-		index := strings.Index(s, "=")
-		if index < 0 {
-			continue
-		}
-		key := strings.TrimSpace(s[:index])
-		if len(key) == 0 {
-			continue
-		}
-		value := strings.TrimSpace(s[index+1:])
-		if len(value) == 0 {
-			continue
-		}
-		config[key] = value
-	}
-	return config
-}
 func main() {
 	//
 
-	config := InitConfig()
+	// 初始化配置文件
+	env := utils.InitConfig()
 
 	gin.DisableConsoleColor()
 	// Logging to a file.
@@ -80,6 +43,7 @@ func main() {
 		resBody := &library.ResponseBody{Code: 404, Message: "route not found!!!"}
 		c.JSON(http.StatusNotFound, resBody)
 	})
-	fmt.Println(config)
-	r.Run(":" + config["port"])
+
+	r.Run(":" + env["port"])
+
 }

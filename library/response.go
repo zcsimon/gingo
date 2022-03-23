@@ -3,6 +3,7 @@ package library
 // 返回数据处理 TODO:: data数据及json数据可选处理
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -41,8 +42,8 @@ func RecoverResponse(c *gin.Context, responseBody *ResponseBody) {
 	}
 
 	resp, err := json.Marshal(responseBody)
+	log.Println("respose marshal.", err)
 	if err != nil {
-
 		c.Data(http.StatusOK, "application/json;charset=utf-8", []byte(`{"code":2,"message":"unknown"}`))
 	} else {
 		c.Data(http.StatusOK, "application/json;charset=utf-8", resp)

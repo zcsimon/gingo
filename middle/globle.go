@@ -20,4 +20,5 @@ func Middleware() gin.HandlerFunc {
 		t2 := time.Since(t)
 		log.Println("time:", t2)
 	}
+	
 }

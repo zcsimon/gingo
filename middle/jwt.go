@@ -4,7 +4,6 @@ import (
 	"box/library"
 	"errors"
 	"log"
-	"net/http"
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
@@ -14,15 +13,17 @@ import (
 // JWTAuth 中间件，检查登录权限
 func JWTAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
+
 		token := c.Request.Header.Get("token")
 		if token == "" {
-			c.JSON(http.StatusOK, gin.H{
-				"status": -1,
-				"msg":    "请求未携带token，无权限访问",
-			})
+			// c.JSON(http.StatusOK, gin.H{
+			// 	"status": -1,
+			// 	"msg":    "请求未携带token，无权限访问",
+			// })
 			responseBody := &library.ResponseBody{}
+			defer library.RecoverResponse(c, responseBody)
 			responseBody.SetCode(-1)
-			responseBody.SetMessage("授权已过期")
+			responseBody.SetMessage("请求未携带token，无权限访问")
 			c.Abort()
 			return
 		}
@@ -35,8 +36,10 @@ func JWTAuth() gin.HandlerFunc {
 
 		if err != nil {
 			responseBody := &library.ResponseBody{}
+			defer library.RecoverResponse(c, responseBody)
 			if err == ErrTokenExpired {
 				// TODO:: 修改返回代码
+				//log.Println(11111111)
 				responseBody.SetCode(-1)
 				responseBody.SetMessage("授权已过期")
 				c.Abort()
@@ -100,19 +103,25 @@ func (j *JWT) CreateToken(claims *CustomClaims) (string, error) {
 
 // 解析Tokne
 func (j *JWT) ParseToken(tokenString string) (*CustomClaims, error) {
+
 	token, err := jwt.ParseWithClaims(tokenString, &CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return j.SigningKey, nil
 	})
+
 	if err != nil {
 		if ve, ok := err.(*jwt.ValidationError); ok {
 			if ve.Errors&jwt.ValidationErrorMalformed != 0 {
+				log.Println(11)
 				return nil, ErrTokenMalformed
 			} else if ve.Errors&jwt.ValidationErrorExpired != 0 {
 				// Token is expired
+				log.Println(ErrTokenExpired)
 				return nil, ErrTokenExpired
 			} else if ve.Errors&jwt.ValidationErrorNotValidYet != 0 {
+				log.Println(13)
 				return nil, ErrTokenNotValidYet
 			} else {
+				log.Println(14)
 				return nil, ErrTokenInvalid
 			}
 		}

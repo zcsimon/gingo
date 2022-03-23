@@ -35,11 +35,14 @@ func Http(r *gin.Engine) {
 		apiRouter.POST("/login_json", v1.Login)
 		apiRouter.POST("/login_form", v1.LoginFromForm)
 		apiRouter.GET("/login/:username/:password", v1.LoginFromUri)
+		apiRouter.POST("/exchange", v1.SaveOrderAction)
 	}
 	authRouter := r.Group("api/v1")
 	authRouter.Use(middle.JWTAuth())
 	{
 		authRouter.GET("user/:id", v1.GetUserById)
+		authRouter.POST("order", v1.SaveOrder)
+		authRouter.GET("order", v1.SaveOrderAction)
 	}
 	r.NoRoute(func(c *gin.Context) {
 		resBody := &library.ResponseBody{Code: 404, Message: "route not found!"}
