@@ -37,10 +37,10 @@ type RabbitMQ struct {
 	mode         string
 	connection   *amqp.Connection
 	channel      *amqp.Channel
-	queueName    string // 队列名称
-	routingKey   string // key名称
-	exchangeName string // 交换机名称
-	exchangeType string // 交换机类型
+	queueName    []string // 队列名称
+	routingKey   string   // key名称
+	exchangeName string   // 交换机名称
+	exchangeType string   // 交换机类型
 	producer     [][]byte
 	receiver     [][]byte
 	mu           sync.RWMutex
@@ -48,11 +48,11 @@ type RabbitMQ struct {
 
 // 定义队列交换机对象
 type QueueExchange struct {
-	Mode   string // 队列模式
-	QuName string // 队列名称
-	RtKey  string // key值
-	ExName string // 交换机名称
-	ExType string // 交换机类型
+	Mode   string   // 队列模式
+	QuName []string // 队列名称
+	RtKey  string   // key值
+	ExName string   // 交换机名称
+	ExType string   // 交换机类型
 }
 
 // 链接rabbitMQ
@@ -122,19 +122,19 @@ func (r *RabbitMQ) Start() {
 
 	case "work":
 		for _, p := range r.producer {
-			go r.listenProducer(p)
+			go r.TopicModeProducer(p)
 		}
 	case "pubsub":
 		for _, p := range r.producer {
-			go r.listenProducer(p)
+			go r.TopicModeProducer(p)
 		}
 	case "routing":
 		for _, p := range r.producer {
-			go r.listenProducer(p)
+			go r.TopicModeProducer(p)
 		}
 	case "topic":
 		for _, p := range r.producer {
-			go r.listenProducer(p)
+			go r.TopicModeProducer(p)
 		}
 	case "rpc":
 
@@ -167,12 +167,14 @@ func (r *RabbitMQ) SimpleModeProducer(producer []byte) {
 	}
 
 	// 用于检查队列是否存在,已经存在不需要重复声明
-	_, err := r.channel.QueueDeclare(r.queueName, true, false, false, false, nil)
-
-	if err != nil {
-		fmt.Printf("MQ注册队列失败:%s \n", err)
-		return
+	for _, qn := range r.queueName {
+		_, err := r.channel.QueueDeclare(qn, true, false, false, false, nil)
+		if err != nil {
+			fmt.Printf("MQ注册队列[%s]失败:%s \n", qn, err)
+			return
+		}
 	}
+	//_, err := r.channel.QueueDeclare(r.queueName, true, false, false, false, nil)
 	// TODO:: 检查完后，再创建，提示channel 关闭 暂时不检查
 	// _, err := r.channel.QueueDeclarePassive(r.queueName, true, false, false, false, nil)
 
@@ -183,10 +185,76 @@ func (r *RabbitMQ) SimpleModeProducer(producer []byte) {
 	// 		return
 	// 	}
 	// }
-	err = r.channel.Publish("", r.routingKey, false, false, amqp.Publishing{
+	err := r.channel.Publish("", r.routingKey, false, false, amqp.Publishing{
 		ContentType: "text/plain",
 		Body:        producer,
 	})
+	if err != nil {
+		fmt.Printf("MQ任务发送失败:%s \n", err)
+		return
+	}
+}
+
+// 发送任务
+func (r *RabbitMQ) TopicModeProducer(producer []byte) {
+	// 验证链接是否正常,否则重新链接
+	//r.isConnection()
+	if r.channel == nil {
+		r.mqConnect()
+	}
+
+	log.Println("11111111111111111")
+	// 用于检查队列是否存在,已经存在不需要重复声明
+	//_, err := r.channel.QueueDeclare(r.queueName, true, false, false, false, nil)
+	// 用于检查队列是否存在,已经存在不需要重复声明
+	// 创建交换机
+	//r.channel.ExchangeDeclare(r.exchangeName, r.routingKey, true, false, false, false, nil)
+
+	// for _, qn := range r.queueName {
+	// 	_, err := r.channel.QueueDeclare(qn, true, false, false, false, nil)
+	// 	if err != nil {
+	// 		fmt.Printf("MQ注册队列[%s]失败:%s \n", qn, err)
+	// 		return
+	// 	}
+	// 	// r.channel.QueueBind(qn, "*.name.*", r.exchangeName, false, nil)
+	// }
+
+	err := r.channel.ExchangeDeclare(r.exchangeName, r.routingKey, true, false, false, false, nil)
+	if err != nil {
+		log.Println("line:224", err)
+		return
+	}
+	_, err = r.channel.QueueDeclare("topic-cluster-queue-msm", true, false, false, false, nil)
+	if err != nil {
+		log.Println("line:229", err)
+		return
+	}
+	_, err = r.channel.QueueDeclare("topic-cluster-queue-mail", true, false, false, false, nil)
+	if err != nil {
+		log.Println("line:234", err)
+		return
+	}
+	// 暂时硬绑定测试
+	err = r.channel.QueueBind("topic-cluster-queue-msm", "msm.#", r.exchangeName, false, nil)
+	if err != nil {
+		log.Println("line:240", err)
+		return
+	}
+	err = r.channel.QueueBind("topic-cluster-queue-mail", "*.mail.*", r.exchangeName, false, nil)
+	if err != nil {
+		log.Println("line:245", err)
+		return
+	}
+	// 创建交换机
+
+	//r.channel.QueueBind()
+	//ec.SendMailQueue, ec.SendMsmQueue, ec.FanoutExchange, false, nil
+
+	err = r.channel.Publish(r.exchangeName, "msm.mail.13800138000", false, false, amqp.Publishing{
+		ContentType: "text/plain",
+		Body:        producer,
+	})
+
 	if err != nil {
 		fmt.Printf("MQ任务发送失败:%s \n", err)
 		return
@@ -199,19 +267,19 @@ func (r *RabbitMQ) listenProducer(producer interface{}) {
 	r.isConnection()
 	// 用于检查队列是否存在,已经存在不需要重复声明
 
-	queue, err := r.channel.QueueDeclarePassive(r.queueName, true, false, false, true, nil)
+	//queue, err := r.channel.QueueDeclarePassive(r.queueName, true, false, false, true, nil)
 
-	log.Println("queue", queue)
-	if err != nil {
-		// 队列不存在,声明队列
-		// name:队列名称;durable:是否持久化,队列存盘,true服务重启后信息不会丢失,影响性能;autoDelete:是否自动删除;noWait:是否非阻塞,
-		// true为是,不等待RMQ返回信息;args:参数,传nil即可;exclusive:是否设置排他
-		_, err = r.channel.QueueDeclare(r.queueName, true, false, false, true, nil)
-		if err != nil {
-			fmt.Printf("MQ注册队列失败:%s \n", err)
-			return
-		}
-	}
+	//log.Println("queue", queue)
+	// if err != nil {
+	// 	// 队列不存在,声明队列
+	// 	// name:队列名称;durable:是否持久化,队列存盘,true服务重启后信息不会丢失,影响性能;autoDelete:是否自动删除;noWait:是否非阻塞,
+	// 	// true为是,不等待RMQ返回信息;args:参数,传nil即可;exclusive:是否设置排他
+	// 	_, err = r.channel.QueueDeclare(r.queueName, true, false, false, true, nil)
+	// 	if err != nil {
+	// 		fmt.Printf("MQ注册队列失败:%s \n", err)
+	// 		return
+	// 	}
+	// }
 	// 队列绑定 简单模式 无需绑定
 	// err = r.channel.QueueBind(r.queueName, r.routingKey, r.exchangeName, true, nil)
 	// if err != nil {
@@ -232,7 +300,7 @@ func (r *RabbitMQ) listenProducer(producer interface{}) {
 	// 	}
 	// }
 	// 发送任务消息
-	err = r.channel.Publish(r.exchangeName, r.routingKey, false, false, amqp.Publishing{
+	err := r.channel.Publish(r.exchangeName, r.routingKey, false, false, amqp.Publishing{
 		ContentType: "text/plain",
 		Body:        []byte(producer.(string)),
 	})

@@ -7,10 +7,9 @@
 [GIN-debug] POST   /api/v1/login_json        --> box/api/v1.Login (1 handlers)
 [GIN-debug] POST   /api/v1/login_form        --> box/api/v1.LoginFromForm (1 handlers)
 [GIN-debug] GET    /api/v1/login/:username/:password --> box/api/v1.LoginFromUri (1 handlers)
-[GIN-debug] POST   /api/v1/exchange          --> box/api/v1.SaveOrderAction (1 handlers)
 [GIN-debug] GET    /api/v1/user/:id          --> box/api/v1.GetUserById (2 handlers)
 [GIN-debug] POST   /api/v1/order             --> box/api/v1.SaveOrder (2 handlers)
-[GIN-debug] GET    /api/v1/order             --> box/api/v1.SaveOrderAction (2 handlers)
+[GIN-debug] GET    /api/v1/order             --> box/api/v1.Topic (2 handlers)
 [GIN-debug] [WARNING] You trusted all proxies, this is NOT safe. We recommend you to set a value.
 Please check https://pkg.go.dev/github.com/gin-gonic/gin#readme-don-t-trust-all-proxies for details.
 [GIN-debug] Listening and serving HTTP on :8801
