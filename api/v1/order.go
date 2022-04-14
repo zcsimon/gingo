@@ -74,6 +74,7 @@ func Topic(c *gin.Context) {
 	mq.RegisterProducer(data)
 	// 启动
 	mq.Start()
+	//
 
 	responseBody.SetCode(0)
 	responseBody.SetMessage("发送成功")

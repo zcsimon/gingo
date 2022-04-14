@@ -44,6 +44,7 @@ func main() {
 		c.JSON(http.StatusNotFound, resBody)
 	})
 
+	// 3.启动服务，监听端口
 	r.Run(":" + env["port"])
 
 }
